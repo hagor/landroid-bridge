@@ -29,6 +29,10 @@ export class LandroidS {
         this.sendMessage(1);
     }
 
+    public pauseMower(): void {
+        this.sendMessage(2);
+    }
+
     public stopMower(): void {
         this.sendMessage(3);
     }
@@ -66,6 +70,10 @@ export class LandroidS {
         message[weekday] = this.timePeriodToCloudArray(timePeriod);
         this.log.info("Setting new schedule with update for weekday %d to %s", weekday, JSON.stringify(message));
         this.sendMessage(null, {sc: {d: message}});
+    }
+
+    public poll(): void {
+        this.sendMessage(null, {});
     }
 
     private timePeriodToCloudArray(timePeriod: any): Array<any> {
@@ -171,13 +179,17 @@ export class LandroidS {
                 this.startMower();
             } else if (topic === "set/stop") {
                 this.stopMower();
+            } else if (topic === "set/pause") {
+                this.pauseMower();
             } else if (topic === "set/mow") {
                 if (String(payload) === "start") {
                     this.startMower();
                 } else if (String(payload) === "stop") {
                     this.stopMower();
+                } else if (String(payload) === "pause") {
+                    this.pauseMower();
                 } else {
-                    this.log.error("Invalid MQTT payload for topic %s", payload %s, topic, payload);
+                    this.log.error("Invalid MQTT payload for topic %s: %s", topic, payload);
                 }
             } else if (topic === "set/rainDelay") {
                 this.setRainDelay(payload);
@@ -186,6 +198,8 @@ export class LandroidS {
             } else if (topic.startsWith("set/schedule/")) {
                 let weekday = parseInt(topic.substr("set/schedule/".length), 10);
                 this.setSchedule(weekday, String(payload));
+            } else if (topic === "set/poll") {
+                this.poll();
             } else {
                 this.log.error("Unknown MQTT topic: %s", topic);
             }
